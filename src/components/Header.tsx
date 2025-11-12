@@ -1,10 +1,12 @@
 import { useAuth } from '@/contexts/AuthContext';
+import { useTheme } from '@/contexts/ThemeContext';
 import { Button } from '@/components/ui/button';
-import { LogOut, Wallet } from 'lucide-react';
+import { LogOut, Wallet, Moon, Sun } from 'lucide-react';
 import { toast } from 'sonner';
 
 export const Header = () => {
   const { user, disconnectWallet } = useAuth();
+  const { theme, toggleTheme } = useTheme();
 
   const handleDisconnect = () => {
     disconnectWallet();
@@ -35,6 +37,9 @@ export const Header = () => {
         </div>
 
         <div className="flex items-center gap-4">
+          <Button variant="ghost" size="icon" onClick={toggleTheme}>
+            {theme === 'light' ? <Moon className="w-4 h-4" /> : <Sun className="w-4 h-4" />}
+          </Button>
           <div className="flex items-center gap-2 text-sm">
             <Wallet className="w-4 h-4 text-primary" />
             <code className="bg-muted px-2 py-1 rounded text-xs">
