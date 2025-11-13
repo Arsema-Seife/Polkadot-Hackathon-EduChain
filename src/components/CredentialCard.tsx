@@ -70,6 +70,7 @@ export const CredentialCard = ({ credential, showActions = true }: CredentialCar
               <DialogContent>
                 <DialogHeader>
                   <DialogTitle>Credential QR Code</DialogTitle>
+                  <p className="text-sm text-muted-foreground">Share this QR code for credential verification</p>
                 </DialogHeader>
                 <div className="flex flex-col items-center gap-4 p-4">
                   <QRCode value={JSON.stringify(credentialData)} size={256} />

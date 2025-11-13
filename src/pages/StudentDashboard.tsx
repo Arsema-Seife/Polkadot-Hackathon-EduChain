@@ -9,23 +9,31 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogDescription } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { GraduationCap, Upload, Award, Bell } from 'lucide-react';
+import { GraduationCap, Upload, Award, Bell, User, Building } from 'lucide-react';
 import { toast } from 'sonner';
 import { Badge } from '@/components/ui/badge';
+import QRCode from 'react-qr-code';
 
 export default function StudentDashboard() {
   const { user } = useAuth();
   const [credentials, setCredentials] = useState<Credential[]>([]);
   const [onlineCerts, setOnlineCerts] = useState<OnlineCertificate[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [allOrganizations, setAllOrganizations] = useState<string[]>([]);
 
   const [certForm, setCertForm] = useState({
     courseName: '',
     provider: 'Coursera',
     completionDate: '',
     certificateUrl: '',
+  });
+
+  const [profile, setProfile] = useState({
+    name: '',
+    email: '',
+    graduationYear: '',
   });
 
   useEffect(() => {
@@ -40,11 +48,39 @@ export default function StudentDashboard() {
     const certs = blockchainService.getStudentOnlineCertificates(user.walletAddress);
     setCredentials(creds);
     setOnlineCerts(certs);
+
+    // Get all unique organizations/universities
+    const allCreds = blockchainService.getAllCredentials();
+    const universities = [...new Set(allCreds.map(c => c.university))];
+    const onlineProviders = [...new Set(certs.map(c => c.provider))];
+    setAllOrganizations([...universities, ...onlineProviders]);
+
+    // Load profile
+    const savedProfile = localStorage.getItem(`profile_${user.walletAddress}`);
+    if (savedProfile) {
+      setProfile(JSON.parse(savedProfile));
+    }
+  };
+
+  const handleSaveProfile = () => {
+    if (!user?.walletAddress) return;
+    localStorage.setItem(`profile_${user.walletAddress}`, JSON.stringify(profile));
+    toast.success('Profile updated successfully!');
   };
 
   const handleSubmitCertificate = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!user?.walletAddress) return;
+
+    // Input validation
+    if (!certForm.courseName.trim() || certForm.courseName.length > 200) {
+      toast.error('Course name must be between 1 and 200 characters');
+      return;
+    }
+    if (!certForm.certificateUrl.match(/^https?:\/\/.+/)) {
+      toast.error('Please enter a valid certificate URL');
+      return;
+    }
 
     setIsSubmitting(true);
     try {
@@ -52,10 +88,10 @@ export default function StudentDashboard() {
 
       blockchainService.submitOnlineCertificate({
         studentWalletAddress: user.walletAddress,
-        courseName: certForm.courseName,
+        courseName: certForm.courseName.trim(),
         provider: certForm.provider,
         completionDate: certForm.completionDate,
-        certificateUrl: certForm.certificateUrl,
+        certificateUrl: certForm.certificateUrl.trim(),
       });
 
       toast.success('Certificate submitted for verification!');
@@ -136,6 +172,14 @@ export default function StudentDashboard() {
               <Award className="w-4 h-4 mr-2" />
               Online Certificates
             </TabsTrigger>
+            <TabsTrigger value="organizations">
+              <Building className="w-4 h-4 mr-2" />
+              Organizations
+            </TabsTrigger>
+            <TabsTrigger value="profile">
+              <User className="w-4 h-4 mr-2" />
+              Profile
+            </TabsTrigger>
             <TabsTrigger value="notifications">
               <Bell className="w-4 h-4 mr-2" />
               Notifications
@@ -171,6 +215,9 @@ export default function StudentDashboard() {
                 <DialogContent>
                   <DialogHeader>
                     <DialogTitle>Submit Online Course Certificate</DialogTitle>
+                    <DialogDescription>
+                      Add your online course certificate for verification
+                    </DialogDescription>
                   </DialogHeader>
                   <form onSubmit={handleSubmitCertificate} className="space-y-4">
                     <div>
@@ -253,12 +300,119 @@ export default function StudentDashboard() {
                             IPFS: {cert.ipfsHash.slice(0, 20)}...
                           </div>
                         </div>
+                        <Dialog>
+                          <DialogTrigger asChild>
+                            <Button variant="outline" size="sm" className="w-full mt-4">
+                              View QR Code
+                            </Button>
+                          </DialogTrigger>
+                          <DialogContent>
+                            <DialogHeader>
+                              <DialogTitle>Certificate QR Code</DialogTitle>
+                              <DialogDescription>
+                                Share this QR code for verification
+                              </DialogDescription>
+                            </DialogHeader>
+                            <div className="flex flex-col items-center gap-4 p-4">
+                              <QRCode 
+                                value={JSON.stringify({
+                                  id: cert.id,
+                                  courseName: cert.courseName,
+                                  provider: cert.provider,
+                                  completionDate: cert.completionDate,
+                                  status: cert.verificationStatus,
+                                  ipfsHash: cert.ipfsHash
+                                })} 
+                                size={256} 
+                              />
+                              <p className="text-sm text-muted-foreground text-center">
+                                Scan to verify certificate
+                              </p>
+                            </div>
+                          </DialogContent>
+                        </Dialog>
                       </CardContent>
                     </Card>
                   ))}
                 </div>
               )}
             </div>
+          </TabsContent>
+
+          <TabsContent value="organizations">
+            <Card>
+              <CardHeader>
+                <CardTitle>All Issuing Organizations</CardTitle>
+                <CardDescription>
+                  Universities and platforms that have issued credentials
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                {allOrganizations.length === 0 ? (
+                  <p className="text-center text-muted-foreground py-8">No organizations found</p>
+                ) : (
+                  <div className="grid md:grid-cols-2 gap-3">
+                    {allOrganizations.map((org, idx) => (
+                      <div key={idx} className="flex items-center gap-3 p-3 border rounded-lg">
+                        <Building className="w-5 h-5 text-primary" />
+                        <div>
+                          <p className="font-medium">{org}</p>
+                          <p className="text-xs text-muted-foreground">Verified Issuer</p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="profile">
+            <Card>
+              <CardHeader>
+                <CardTitle>Student Profile</CardTitle>
+                <CardDescription>
+                  Manage your personal information
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div>
+                  <Label htmlFor="walletAddress">Wallet Address</Label>
+                  <Input id="walletAddress" value={user?.walletAddress || ''} disabled />
+                </div>
+                <div>
+                  <Label htmlFor="name">Full Name</Label>
+                  <Input 
+                    id="name" 
+                    value={profile.name}
+                    onChange={(e) => setProfile({ ...profile, name: e.target.value })}
+                    placeholder="Enter your full name"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="email">Email</Label>
+                  <Input 
+                    id="email" 
+                    type="email"
+                    value={profile.email}
+                    onChange={(e) => setProfile({ ...profile, email: e.target.value })}
+                    placeholder="your.email@example.com"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="graduationYear">Graduation Year</Label>
+                  <Input 
+                    id="graduationYear" 
+                    value={profile.graduationYear}
+                    onChange={(e) => setProfile({ ...profile, graduationYear: e.target.value })}
+                    placeholder="2024"
+                  />
+                </div>
+                <Button onClick={handleSaveProfile} className="w-full">
+                  Save Profile
+                </Button>
+              </CardContent>
+            </Card>
           </TabsContent>
 
           <TabsContent value="notifications">
