@@ -2,10 +2,6 @@
 
 **Decentralized Student Credential Wallet on Polkadot**
 
----
-
-## Tagline
-
 Own your credentials. Verify instantly. Trustlessly.
 
 ---
