@@ -153,9 +153,9 @@ export const NavBar = () => {
                 <DropdownMenuLabel>Account Settings</DropdownMenuLabel>
                 <DropdownMenuSeparator />
                 
-                <DropdownMenuItem onClick={() => navigate('/student')}>
-                  <User className="w-4 h-4 mr-2" />
-                  Profile Settings
+                <DropdownMenuItem onClick={() => navigate('/settings')}>
+                  <Settings className="w-4 h-4 mr-2" />
+                  Settings & Privacy
                 </DropdownMenuItem>
 
                 <DropdownMenuItem onClick={handleCopyWallet}>
