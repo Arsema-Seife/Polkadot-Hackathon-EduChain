@@ -107,18 +107,17 @@ All colors MUST be HSL.
 
   body {
     @apply bg-background text-foreground;
-    cursor: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='20' height='20' viewBox='0 0 24 24' fill='none' stroke='%231e3a8a' stroke-width='2'%3E%3Cpath d='M12 2 L17 12 L12 22 L7 12 Z'/%3E%3C/svg%3E") 10 10, auto;
   }
 
-  .dark body {
-    cursor: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='20' height='20' viewBox='0 0 24 24' fill='none' stroke='%23ffffff' stroke-width='2'%3E%3Cpath d='M12 2 L17 12 L12 22 L7 12 Z'/%3E%3C/svg%3E") 10 10, auto;
+  /* Glowing hover effects */
+  button:not(:disabled):hover, a:hover {
+    box-shadow: 0 0 20px hsl(var(--primary) / 0.3);
+    transition: all 0.3s ease;
   }
 
-  button, a, input, select, textarea {
-    cursor: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='20' height='20' viewBox='0 0 24 24' fill='none' stroke='%231e3a8a' stroke-width='2'%3E%3Cpath d='M12 2 L17 12 L12 22 L7 12 Z'/%3E%3C/svg%3E") 10 10, pointer;
-  }
-
-  .dark button, .dark a, .dark input, .dark select, .dark textarea {
-    cursor: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='20' height='20' viewBox='0 0 24 24' fill='none' stroke='%23ffffff' stroke-width='2'%3E%3Cpath d='M12 2 L17 12 L12 22 L7 12 Z'/%3E%3C/svg%3E") 10 10, pointer;
+  .glow-on-hover:hover {
+    box-shadow: 0 0 30px hsl(var(--primary) / 0.5), 0 0 60px hsl(var(--primary) / 0.3);
+    transform: translateY(-2px);
+    transition: all 0.3s ease;
   }
 }

@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Header } from '@/components/Header';
+import { NavBar } from '@/components/NavBar';
 import { CredentialCard } from '@/components/CredentialCard';
 import { Credential } from '@/types';
 import { blockchainService } from '@/services/blockchain';
@@ -49,7 +49,7 @@ export default function EmployerDashboard() {
 
   return (
     <div className="min-h-screen bg-background">
-      <Header />
+      <NavBar />
       <div className="container mx-auto px-4 py-8">
         <div className="mb-6">
           <h2 className="text-3xl font-bold mb-2">Employer Dashboard</h2>
